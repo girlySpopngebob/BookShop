@@ -1,6 +1,6 @@
 import express, { response } from 'express'
 import {PORT,MongoDBURL} from './config.js'
-import  { MongoClient, ServerApiVersion } from "mongodb"
+import  { MongoClient, ObjectId, ServerApiVersion } from "mongodb"
 const app = express()
 
 
@@ -23,17 +23,39 @@ app.listen(PORT, () => {
 })
 
 app.get('/', (req, res) => {
+    //show all the books
   return  res.status(200).send("<h1>Hello Nigger</h1>")})
 
 app.get('/shop', (req, res) => {
-   return res.status(200).send("<h1>Shop</h1>")
-})
-app.get('/shop/:id', (req, res) => {
-    const data = req.params 
-    return res.status(200).send(`<h1> Book: ${data.id}</h1>`)
+  
+    mybooks.find().toArray()
+    .then(response=>{
+     //    console.log(response)
+       return res.status(200).send(response)
+    })
+    .catch(err =>console.log(err))
+    //return res.status(200).send("<h1>Shop</h1>")
 })
 
-app.post('/savebook',(req, res) => {
+app.get('/shop/:id', (req, res) => {
+    //show a specfic book
+    const data = req.params 
+
+    const filter= {
+        "_id" : new ObjectId(data.id)
+    }
+
+    mybooks.findOne(filter)
+    .then(response=>{
+     //    console.log(response)
+       return res.status(200).send(response)
+    })
+    .catch(err =>console.log(err))
+    //return res.status(200).send(`<h1> Book: ${data.id}</h1>`)
+})
+
+app.post('/admin/savebook',(req, res) => {
+    //add a new book
     const data = req.body
     if (!data.title)
     return res.status(400).send("No Title Nigger")
@@ -49,3 +71,35 @@ app.post('/savebook',(req, res) => {
     })
     return res.status(200).send(JSON.stringify(data))
 } )
+
+app.delete('/admin/remove/:id', (req, res) =>{
+    mybooks.deleteOne()
+    .then(response=>{
+     //    console.log(response)
+       return res.status(200).send(response)
+    })
+    .catch(err =>console.log(err))
+    
+})
+
+app.put('/admin/update/:id', (req, res) =>{
+    const data = req.params
+    const docData = req.body
+
+    const filter ={
+        "_id":new ObjectId (data.id)
+    }
+
+    const upDoc ={
+        $set:{
+            ...docData
+        }
+    }
+
+    mybooks.updateOne(filter, upDoc)
+    .then(response =>{
+        res.status(200).send(response)
+    })
+    .catch(err =>console.log(err))
+
+})
